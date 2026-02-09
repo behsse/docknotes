@@ -3,25 +3,36 @@ import { Navbar } from "./components/Navbar"
 import { NotesContainer } from "./components/NotesContainer"
 import { SearchBar } from "./components/SearchBar"
 import type { Note } from "./interfaces/notes.interface"
+import type { Category } from "./interfaces/category.interface"
 import type { CreateNote } from "./interfaces/createNote.interface"
-import { createNote, getNotes, updateNote } from "./api/note"
+import { createNote, getNotes, updateNote, deleteNote } from "./api/note"
 import NoteForm from "./components/NoteForm"
 import EditNoteForm from "./components/EditNoteForm"
+import { createCategory, getCategories } from "./api/category"
+import { CategoryForm } from "./components/CategoryForm"
 
 function App() {
   
   const [notes, setNotes] = useState<Note[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [isNoteFormOpen, setIsNoteFormOpen] = useState(false)
+  const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false)
   const [selectedColor, setSelectedColor] = useState("#fc03c6")
   const [editingNote, setEditingNote] = useState<Note | null>(null)
 
   const fetchNotes = async () => {
     const data = await getNotes();
-    setNotes(data)
+    setNotes(data);
   };
+
+  const fetchCategories = async () => {
+    const data = await getCategories();
+    setCategories(data);
+  }
 
   useEffect(() => {
     fetchNotes()
+    fetchCategories()
   }, []);
 
   const handleColorSelect = (color : string) => {
@@ -35,6 +46,12 @@ function App() {
     await fetchNotes()
   }
 
+  const handleCreateCategory = async (data : {name: string, description? : string}) => {
+    await createCategory(data);
+    setIsCategoryFormOpen(false);
+    await fetchCategories();
+  }
+
   const handleUpdateNote = async (id : number, data: {title?: string; content?: string}) => {
     await updateNote(id, data);
     await fetchNotes();
@@ -46,9 +63,14 @@ function App() {
     await fetchNotes()
   }
 
+  const handleDeleteNote = async (id : number) => {
+    await deleteNote(id)
+    await fetchNotes()
+  }
+
   return (
     <main className="h-screen flex overflow-hidden">
-      <Navbar onColorSelect={handleColorSelect}/>
+      <Navbar onColorSelect={handleColorSelect} onOpenCategoryForm={() => setIsCategoryFormOpen(true)}/>
       <div className="flex-1 p-10 overflow-y-scroll">
         <div className="flex flex-col gap-30">
           <div className="flex justify-center">
@@ -57,6 +79,7 @@ function App() {
           <NotesContainer 
             notes={notes} 
             onUpdate={handleUpdateNote}
+            onDelete={handleDeleteNote}
             onEdit={(note) => setEditingNote(note)}
           />
         </div>
@@ -65,6 +88,7 @@ function App() {
         isNoteFormOpen && (
           <NoteForm
             color={selectedColor}
+            categories={categories}
             onSubmit={handleCreateNote}
             onClose={() => setIsNoteFormOpen(false)}
             />
@@ -74,8 +98,17 @@ function App() {
         editingNote && (
           <EditNoteForm 
             note={editingNote}
+            categories={categories}
             onSubmit={handleEditNote}
             onClose={() => setEditingNote(null)}
+          />
+        )
+      }
+      {
+        isCategoryFormOpen && (
+          <CategoryForm 
+            onSubmit={handleCreateCategory}
+            onClose={() => setIsCategoryFormOpen(false)}
           />
         )
       }

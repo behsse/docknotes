@@ -1,14 +1,16 @@
 import { useState } from "react";
 import type { Note } from "../interfaces/notes.interface"
 import { X } from "lucide-react";
+import type { Category } from "../interfaces/category.interface";
 
 interface Props {
     note : Note
+    categories : Category[]
     onSubmit: (id: number, data: { title: string; content: string; category_id: number | null }) => void;
     onClose: () => void;
 }
 
-const EditNoteForm = ({note, onSubmit, onClose}: Props) => {
+const EditNoteForm = ({note, categories, onSubmit, onClose}: Props) => {
 
     const [title, setTitle] = useState(note.title || "");
     const [content, setContent] = useState(note.content || "");
@@ -64,6 +66,17 @@ const EditNoteForm = ({note, onSubmit, onClose}: Props) => {
                     rows={5}
                     className="border border-gray-300 rounded-lg px-4 py-2 outline-none resize-none focus:border-gray-500"
                 />
+
+                <select 
+                    value={categoryId ?? ""}
+                    onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+                    className="border border-gray-300 rounded-lg px-4 py-2 outline-none resize-none focus:border-gray-500"
+                >
+                    <option value="">Sans catégorie</option>
+                    {categories.map((category) => (
+                        <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                </select>
 
                 <div className="flex gap-3 justify-end">
                     <button

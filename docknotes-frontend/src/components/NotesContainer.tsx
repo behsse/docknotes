@@ -4,9 +4,10 @@ import type { Note as NoteType } from "../interfaces/notes.interface"
 interface Props {
     notes : NoteType[];
     onUpdate : (id: number, data : {content? : string}) => void;
+    onDelete : (id : number) => void;
     onEdit: (note: NoteType) => void;
 }
-export const NotesContainer = ({notes, onUpdate, onEdit} : Props) => {
+export const NotesContainer = ({notes, onUpdate, onDelete, onEdit} : Props) => {
 
     return (
         <div className="px-10 grid gap-15">
@@ -14,7 +15,7 @@ export const NotesContainer = ({notes, onUpdate, onEdit} : Props) => {
             <div className="grid grid-cols-5 gap-15">
                 {
                     notes.map((note) => (
-                        <Note key={note.id} note={note} onUpdate={onUpdate} onEdit={onEdit}/>
+                        <Note key={note.id} note={note} onUpdate={onUpdate} onEdit={onEdit} onDelete={onDelete}/>
                     ))
                 }
             </div>
