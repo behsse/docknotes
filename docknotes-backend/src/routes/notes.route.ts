@@ -1,50 +1,72 @@
 import express, { Request, Response } from "express";
 import db from "@/lib/db";
-import { Note } from "@/interfaces/notes.interface";
+import { auth } from "@/lib/auth";
+import { fromNodeHeaders } from "better-auth/node";
 
 const router: express.Router = express.Router();
 
-router.get("/", async (req : Request, res : Response) => {
-    const {title} = req.query;
+const getUserId = async (req : Request) : Promise<string | null> => {
+    const session = await auth.api.getSession({
+        headers: fromNodeHeaders(req.headers)
+    });
+    return session?.user?.id ?? null;
+}
 
-    if (title && typeof title === "string") {
-      const data = await db.note.findMany({
-        where : {
-            content : {
-                contains : title
-            }
-        },
-        orderBy : { date : "desc"},
-        include : {
-            category : {
-                select : {
-                    name : true,
-                    description : true
+router.get("/", async (req : Request, res : Response) => {
+    try{
+        const userId = await getUserId(req);
+        if(!userId) {
+            return res.status(401).json({message : "Non authentifié"});
+        }
+
+        const {title} = req.query;
+        if (title && typeof title === "string") {
+            const data = await db.note.findMany({
+            where : {
+                content : {
+                    contains : title
+                }
+            },
+            orderBy : { date : "desc"},
+            include : {
+                category : {
+                    select : {
+                        name : true,
+                        description : true
+                    }
                 }
             }
+        });
+        return res.status(200).json(data);
         }
-      });
-      return res.status(200).json(data);
+        const data = await db.note.findMany({
+            orderBy : { date : "desc"},
+            include : {
+                category : {
+                    select : {
+                        name : true,
+                        description : true
+                    }
+                }
+            }
+        })
+        res.status(200).json(data)
+    } catch (error){
+        res.status(500).json({message : "Erreur server", error})
     }
-    const data = await db.note.findMany({
-        orderBy : { date : "desc"},
-        include : {
-            category : {
-                select : {
-                    name : true,
-                    description : true
-                }
-            }
-        }
-    })
-    res.status(200).json(data)
 });
 
 // ========== GET /notes/:id - Récupérer UNE note par son identifiant ==========
 router.get("/:id", async (req : Request, res : Response) => {
     try {
+
+        const userId = await getUserId(req);
+        if(!userId) {
+            return res.status(401).json({message : "Non authentifié"});
+        }
+
         const {id} = req.params
-        
+
         const data = await db.note.findUnique({
             where : {id: Number(id)},
             include: {category : { select : {name : true, description : true}}}
@@ -61,57 +83,88 @@ router.get("/:id", async (req : Request, res : Response) => {
 
 // ========== POST /notes - Créer une nouvelle note ==========
 router.post("/", async (req : Request, res : Response) => {
-    const {title, color, content, isFavorite, category_id} = req.body;
-
-    if(!title || !content){
-        return res.status(400).json({
-            message : "Les champs title et content sont obligatoires"
-        });
-    };
-
-    const newNote = await db.note.create({
-        data : {
-            title,
-            color : color || "#fc03c6",
-            content,
-            date : new Date(),
-            isFavorite : isFavorite || false,
-            category_id : category_id || null
+    try {
+        const userId = await getUserId(req);
+        if(!userId) {
+            return res.status(401).json({message : "Non authentifié"});
         }
-    })
+        const {title, color, content, isFavorite, category_id} = req.body;
 
-    res.status(201).json(newNote);
+        if(!title || !content){
+            return res.status(400).json({
+                message : "Les champs title et content sont obligatoires"
+            });
+        };
+
+        const newNote = await db.note.create({
+            data : {
+                title,
+                color : color || "#fc03c6",
+                content,
+                date : new Date(),
+                isFavorite : isFavorite || false,
+                category_id : category_id || null,
+                userId
+            }
+        })
+
+        res.status(201).json(newNote);
+    } catch (error) {
+        res.status(500).json({message : "Error server", error});
+    }
 });
 
 // ========== PUT /notes/:id - Remplacer entièrement une note ==========
 router.put("/:id", async (req : Request, res : Response) => {
-    const {id} = req.params;
-    const {title, color, content, isFavorite, category_id} = req.body;
-
-    if(!title || !content || !color){
-        return res.status(400).json({
-            message : "Les champs title et content sont obligatoires"
-        });
-    };
-
-    const data = await db.note.update({
-        where : {id : Number(id)},
-        data : {
-            title,
-            color,
-            content,
-            isFavorite : isFavorite ?? false,
-            category_id : category_id || null
+    try {
+        const userId = await getUserId(req);
+        if(!userId) {
+            return res.status(401).json({message : "Non authentifié"});
         }
-    });
-    res.status(200).json(data);
+        const {id} = req.params;
+        const {title, color, content, isFavorite, category_id} = req.body;
+
+        if(!title || !content || !color){
+            return res.status(400).json({
+                message : "Les champs title et content sont obligatoires"
+            });
+        };
+        const data = await db.note.update({
+            where : {id : Number(id)},
+            data : {
+                title,
+                color,
+                content,
+                isFavorite : isFavorite ?? false,
+                category_id : category_id || null
+            }
+        });
+        res.status(200).json(data);
+    } catch (error) {
+        res.status(500).json({message : "Error server", error});
+    }
 
 });
 
 // ========== PATCH /notes/:id - Modifier partiellement une note ==========
 router.patch("/:id", async (req: Request, res: Response) => {
   try {
+    const userId = await getUserId(req);
+    if(!userId) {
+        return res.status(401).json({message : "Non authentifié"});
+    }
+
     const { id } = req.params;
+
+    const existing = await db.note.findUnique({
+        where : {
+            id : Number(id)
+        }
+    });
+    if(!existing || existing.userId !== userId){
+        return res.status(404).json({message : "Note not found"})
+    }
+
     const { title, color, content, date, isFavorite, category_id } = req.body;
 
     const data : {
@@ -166,7 +219,22 @@ router.patch("/:id", async (req: Request, res: Response) => {
 // ========== DELETE /notes/:id - Supprimer une note ==========
 router.delete("/:id", async (req : Request, res : Response) => {
     try{
+
+        const userId = await getUserId(req);
+        if(!userId) {
+            return res.status(401).json({message : "Non authentifié"});
+        }
+
         const {id} = req.params;
+
+        const existing = await db.note.findUnique({
+            where : {
+                id : Number(id)
+            }
+        });
+        if(!existing || existing.userId !== userId){
+            return res.status(404).json({message : "Note not found"})
+        }
 
         await db.note.delete({
             where : {id : Number(id)}

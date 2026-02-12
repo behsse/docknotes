@@ -10,9 +10,12 @@ import NoteForm from "./components/NoteForm"
 import EditNoteForm from "./components/EditNoteForm"
 import { createCategory, getCategories } from "./api/category"
 import { CategoryForm } from "./components/CategoryForm"
+import { authClient } from "./lib/auth-client"
+import { AuthPage } from "./components/AuthPage"
 
 function App() {
   
+  const { data: session, isPending } = authClient.useSession()
   const [notes, setNotes] = useState<Note[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [isNoteFormOpen, setIsNoteFormOpen] = useState(false)
@@ -31,9 +34,11 @@ function App() {
   }
 
   useEffect(() => {
-    fetchNotes()
-    fetchCategories()
-  }, []);
+    if(session){
+      fetchNotes()
+      fetchCategories()
+    }
+  }, [session]);
 
   const handleColorSelect = (color : string) => {
     setSelectedColor(color)
@@ -68,9 +73,19 @@ function App() {
     await fetchNotes()
   }
 
+  const handleSignOut = async () => {
+    await authClient.signOut()
+    setNotes([])
+    setCategories([])
+  }
+
+  if (!session) {
+  return <AuthPage onAuth={() => {}} />
+}
+
   return (
     <main className="h-screen flex overflow-hidden">
-      <Navbar onColorSelect={handleColorSelect} onOpenCategoryForm={() => setIsCategoryFormOpen(true)}/>
+      <Navbar onColorSelect={handleColorSelect} onOpenCategoryForm={() => setIsCategoryFormOpen(true)} onSignOut={handleSignOut} userName={session.user.name} userImage={session.user.image}/>
       <div className="flex-1 p-10 overflow-y-scroll">
         <div className="flex flex-col gap-30">
           <div className="flex justify-center">
