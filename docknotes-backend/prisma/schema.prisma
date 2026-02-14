@@ -23,7 +23,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   notes         Note[]
-
+  images        Image[]
   @@map("user")
 }
 
@@ -92,4 +92,14 @@ model Note {
   userId        String?
   user          User?      @relation(fields: [userId], references: [id])
   @@map("notes")
+}
+
+model Image {
+  id Int @id @default(autoincrement())
+  url String
+  publicId String
+  createdAt DateTime @default(now())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  @@map("images")
 }

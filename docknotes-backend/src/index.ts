@@ -1,7 +1,9 @@
 import express, {Request, Response} from 'express';
 import cors from "cors";
 import categoriesRouter from "@/routes/categories.route";
-import notesRouter from "@/routes/notes.route"
+import notesRouter from "@/routes/notes.route";
+import contactRouter from "@/routes/contact.route";
+import imageRouter from "@/routes/images.route"
 import db from '@/lib/db';
 import { toNodeHandler } from 'better-auth/node';
 import { auth } from './lib/auth';
@@ -25,6 +27,8 @@ app.get("/", (req : Request, res : Response) => {
 
 app.use("/categories", categoriesRouter);
 app.use("/notes", notesRouter);
+app.use("/contact", contactRouter);
+app.use("/images", imageRouter);
 
 // ========== DÉMARRAGE DU SERVEUR ==========
 app.listen(port, async () => {

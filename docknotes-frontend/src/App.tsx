@@ -12,6 +12,10 @@ import { createCategory, getCategories } from "./api/category"
 import { CategoryForm } from "./components/CategoryForm"
 import { authClient } from "./lib/auth-client"
 import { AuthPage } from "./components/AuthPage"
+import { Routes, Route } from "react-router-dom"
+import ProfilePage from "./pages/ProfilePage"
+import ContactPage from "./pages/ContactPage"
+import { GalleryPage } from "./pages/GalleryPage"
 
 function App() {
   
@@ -85,20 +89,39 @@ function App() {
 
   return (
     <main className="h-screen flex overflow-hidden">
-      <Navbar onColorSelect={handleColorSelect} onOpenCategoryForm={() => setIsCategoryFormOpen(true)} onSignOut={handleSignOut} userName={session.user.name} userImage={session.user.image}/>
-      <div className="flex-1 p-10 overflow-y-scroll">
-        <div className="flex flex-col gap-30">
-          <div className="flex justify-center">
-            <SearchBar/>
+      <Navbar onColorSelect={handleColorSelect} onOpenCategoryForm={() => setIsCategoryFormOpen(true)} userName={session.user.name} userImage={session.user.image} userId={session.user.id}/>
+      <Routes>
+        <Route 
+          path="/"
+          element={
+          <div className="flex-1 p-10 overflow-y-scroll">
+            <div className="flex flex-col gap-30">
+              <div className="flex justify-center">
+                <SearchBar/>
+              </div>
+              <NotesContainer 
+                notes={notes} 
+                onUpdate={handleUpdateNote}
+                onDelete={handleDeleteNote}
+                onEdit={(note) => setEditingNote(note)}
+                />
+            </div>
           </div>
-          <NotesContainer 
-            notes={notes} 
-            onUpdate={handleUpdateNote}
-            onDelete={handleDeleteNote}
-            onEdit={(note) => setEditingNote(note)}
-          />
-        </div>
-      </div>
+          }
+        />
+        <Route
+          path="/profile/:slug"
+          element={<ProfilePage onSignOut={handleSignOut} />}
+        >
+          <Route path="gallery" element={<GalleryPage />} />
+        </Route>
+        <Route
+          path="/contact"
+          element={
+            <ContactPage />
+          }
+        />
+      </Routes>  
       {
         isNoteFormOpen && (
           <NoteForm

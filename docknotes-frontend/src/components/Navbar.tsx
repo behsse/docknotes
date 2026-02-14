@@ -1,13 +1,15 @@
-import { FolderPlus, LogOut } from "lucide-react";
+import { FolderPlus, Images, User } from "lucide-react";
+import { Link } from "react-router-dom";
+
 interface Props {
     onColorSelect : (color : string) => void;
     onOpenCategoryForm : () => void;
-    onSignOut : () => void;
     userName : string;
+    userId : string;
     userImage : string | null | undefined;
 }
 
-export const Navbar = ({onColorSelect, onOpenCategoryForm, onSignOut, userName, userImage} : Props) => {
+export const Navbar = ({onColorSelect, onOpenCategoryForm, userId, userName, userImage} : Props) => {
 
     const colors = ["#3B82F6", "#F97316", "#EF4444", "#22C55E", "#A855F7"];
     
@@ -35,19 +37,21 @@ export const Navbar = ({onColorSelect, onOpenCategoryForm, onSignOut, userName, 
                 <FolderPlus className="w-4 h-4"/>
                 <span className="text-xs">Catégorie</span>
             </button>
-            <div>
-                <button 
-                    onClick={onSignOut}
-                >
-                    {
-                        userImage ?
-                        <img src={userImage} alt="" className="w-8 rounded-full"/>
-                        :
-                        <LogOut className="w-5 h-5"/>
-                    }
-                </button>
+            <Link to={`/profile/${userId}/gallery`} className="flex flex-col items-center gap-1 text-black/60 hover:text-black">
+                <Images className="w-6 h-6" />
+                <span className="text-xs">Galerie</span>
+            </Link>
+            <Link 
+                to={`/profile/${userId}`}
+            >
+                {
+                    userImage ?
+                    <img src={userImage} alt="" className="w-8 rounded-full"/>
+                    :
+                    <User className="w-5 h-5"/>
+                }
                 <p>{userName}</p>
-            </div>
+            </Link>
         </nav>
     )
 }
