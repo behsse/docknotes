@@ -1,41 +1,48 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
-import type { CreateNote } from "../interfaces/createNote.interface";
-import type { Category } from "../interfaces/category.interface";
+import { noteSchema } from "../lib/schemas";
+import type { NoteFormData } from "../lib/schemas";
+import type { Category } from "@/interfaces/category.interface";
 
 interface Props {
-    color : string;
-    categories : Category[];
-    onSubmit : (data: CreateNote) => void;
-    onClose: () => void
+    color: string;
+    categories: Category[];
+    onSubmit: (data: { title: string; content: string; color: string; category_id?: number | null }) => void;
+    onClose: () => void;
 }
 
-const NoteForm = ({color, categories, onSubmit, onClose} : Props) => {
+export const NoteForm = ({ color, categories, onSubmit, onClose }: Props) => {
+    const { register, handleSubmit, formState: { errors, isValid } } = useForm<NoteFormData>({
+        resolver: zodResolver(noteSchema),
+        defaultValues: { title: "", content: "", categoryId: "" },
+        mode: "onChange",
+    });
 
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
-    const [categoryId, setCategoryId] = useState<number | null>(null);
-
-    const handleSubmit = (e : React.FormEvent) => {
-        e.preventDefault()
-        if(!title.trim() || !content.trim()) return;
+    const onFormSubmit = (data: NoteFormData) => {
         onSubmit({
-            title: title.trim(),
-            content: content.trim(),
+            title: data.title.trim(),
+            content: data.content.trim(),
             color,
-            category_id: categoryId
-        })
-    }
+            category_id: data.categoryId ? Number(data.categoryId) : null,
+        });
+    };
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 w-full max-w-md flex flex-col gap-6">
+            <form
+                onSubmit={handleSubmit(onFormSubmit)}
+                className="bg-white rounded-2xl p-8 w-full max-w-md flex flex-col gap-5 shadow-xl"
+            >
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-5 h-5 rounded-full" style={{backgroundColor: color}}/>
+                        <div
+                            className="w-5 h-5 rounded-full"
+                            style={{ backgroundColor: color }}
+                        />
                         <h2 className="text-xl font-semibold">Nouvelle note</h2>
                     </div>
-                    <button 
+                    <button
                         type="button"
                         onClick={onClose}
                         className="cursor-pointer text-gray-500 hover:text-black"
@@ -43,32 +50,42 @@ const NoteForm = ({color, categories, onSubmit, onClose} : Props) => {
                         <X className="w-5 h-5" />
                     </button>
                 </div>
-                <input
-                    type="text"
-                    placeholder="Titre"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    maxLength={50}
-                    className="border border-gray-300 rounded-lg px-4 py-2 outline-none focus:border-gray-500"
-                />
 
-                <textarea
-                    placeholder="Contenu de la note..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    maxLength={500}
-                    rows={5}
-                    className="border border-gray-300 rounded-lg px-4 py-2 outline-none resize-none focus:border-gray-500"
-                />
+                <div>
+                    <input
+                        type="text"
+                        placeholder="Titre"
+                        {...register("title")}
+                        maxLength={50}
+                        className="border border-gray-300 rounded-lg px-4 py-2 outline-none focus:border-gray-500 w-full"
+                    />
+                    {errors.title && (
+                        <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>
+                    )}
+                </div>
 
-                <select 
-                    value={categoryId ?? ""}
-                    onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
-                    className="border border-gray-300 rounded-lg px-4 py-2 outline-none resize-none focus:border-gray-500"
+                <div>
+                    <textarea
+                        placeholder="Contenu de la note..."
+                        {...register("content")}
+                        maxLength={500}
+                        rows={5}
+                        className="border border-gray-300 rounded-lg px-4 py-2 outline-none resize-none focus:border-gray-500 w-full"
+                    />
+                    {errors.content && (
+                        <p className="text-xs text-red-500 mt-1">{errors.content.message}</p>
+                    )}
+                </div>
+
+                <select
+                    {...register("categoryId")}
+                    className="border border-gray-300 rounded-lg px-4 py-2 outline-none focus:border-gray-500 bg-white"
                 >
                     <option value="">Sans catégorie</option>
-                    {categories.map((category) => (
-                        <option key={category.id} value={category.id}>{category.name}</option>
+                    {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                        </option>
                     ))}
                 </select>
 
@@ -82,7 +99,7 @@ const NoteForm = ({color, categories, onSubmit, onClose} : Props) => {
                     </button>
                     <button
                         type="submit"
-                        disabled={!title.trim() || !content.trim()}
+                        disabled={!isValid}
                         className="px-4 py-2 rounded-lg text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{ backgroundColor: color }}
                     >
@@ -91,7 +108,5 @@ const NoteForm = ({color, categories, onSubmit, onClose} : Props) => {
                 </div>
             </form>
         </div>
-    )
-}
-
-export default NoteForm
+    );
+};

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, Trash2, Loader2 } from "lucide-react";
-import { getUserImages, uploadImage, deleteImage } from "../api/image";
-import type { Image } from "../interfaces/image.interface"
+import { getUserImages, uploadImage, deleteImage } from "@/api/image";
+import type { Image } from "@/interfaces/image.interface";
 
 export const GalleryPage = () => {
     const navigate = useNavigate();

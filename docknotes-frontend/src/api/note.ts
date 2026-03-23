@@ -9,6 +9,12 @@ export const getNotes = async () : Promise<Note[]> => {
     return res.json()
 };
 
+export const searchNotes = async (query: string): Promise<Note[]> => {
+  const res = await fetch(`${API_URL}/notes?title=${encodeURIComponent(query)}`, { credentials: "include" });
+  if (!res.ok) throw new Error("Erreur lors de la recherche");
+  return res.json();
+}
+
 export const createNote = async (note : CreateNote) : Promise<Note> => {
     const res = await fetch(`${API_URL}/notes`, {
         method: "POST",
