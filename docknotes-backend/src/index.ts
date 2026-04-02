@@ -1,42 +1,15 @@
-import express, {Request, Response} from 'express';
-import cors from "cors";
-import categoriesRouter from "@/routes/categories.route";
-import notesRouter from "@/routes/notes.route";
-import contactRouter from "@/routes/contact.route";
-import imageRouter from "@/routes/images.route"
-import db from '@/lib/db';
-import { toNodeHandler } from 'better-auth/node';
-import { auth } from './lib/auth';
+import app from "@/app";
+import db from "@/lib/db";
 
-const app = express();
-const port = 3000;
+const PORT = 8000;
 
-app.use(cors({
-    origin : "http://localhost:5173",
-    credentials: true
-}));
+app.listen(PORT, async () => {
+  console.log(`Server is running on port ${PORT}`);
 
-app.all("/api/auth/{*splat}", toNodeHandler(auth))
-app.use(express.json());
-
-app.get("/", (req : Request, res : Response) => {
-    res.json({
-        message : "Bienvenue sur l'API de Docknotes"
-    });
-});
-
-app.use("/categories", categoriesRouter);
-app.use("/notes", notesRouter);
-app.use("/contact", contactRouter);
-app.use("/images", imageRouter);
-
-// ========== DÉMARRAGE DU SERVEUR ==========
-app.listen(port, async () => {
-    console.log(`Server is running on port ${port}`);
-    try{
-        await db.$connect();
-        console.log("Databe connected successfull")
-    } catch(error){
-        console.log("Database connection failed:", error)
-    }
+  try {
+    await db.$connect();
+    console.log("Database connected successfully");
+  } catch (error) {
+    console.error("Database connection failed:", error);
+  }
 });

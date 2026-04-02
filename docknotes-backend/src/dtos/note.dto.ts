@@ -17,12 +17,12 @@ export const updateNoteSchema = z.object({
 });
 
 export const patchNoteSchema = z.object({
-    title : z.string().min(1, "Le titre est obligatoire").max(50, "Le titre doit faire moins de 51 caractères"),
-    content : z.string().min(1, "Le contenu est obligatoire").max(500),
+    title : z.string().min(1, "Le titre est obligatoire").max(50, "Le titre doit faire moins de 51 caractères").optional(),
+    content : z.string().min(1, "Le contenu est obligatoire").max(500).optional(),
     color : z.string().max(50).optional(),
     date : z.coerce.date().optional(),
     isFavorite : z.boolean().optional(),
-    category_id : z.number().int().positive().nullable().optional()      
+    category_id : z.number().int().positive().nullable().optional()
 });
 
 export type CreateNoteDto = z.infer<typeof createNoteSchema>;
