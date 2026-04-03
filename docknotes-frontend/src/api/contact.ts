@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const sendContactMessage = async (message : {name : string, email : string, message : string}) : Promise<void> => {
     const res = await fetch(`${API_URL}/contact`, {

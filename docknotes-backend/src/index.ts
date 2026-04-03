@@ -1,7 +1,7 @@
 import app from "@/app";
 import db from "@/lib/db";
 
-const PORT = 8000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8000;
 
 app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);

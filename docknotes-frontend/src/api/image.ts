@@ -1,6 +1,6 @@
 import type { Image } from "../interfaces/image.interface";
 
-const API_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const getUserImages = async () : Promise<Image[]> => {
     const res = await fetch(`${API_URL}/images`, {credentials: "include"});

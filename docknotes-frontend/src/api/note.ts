@@ -1,7 +1,7 @@
 import type {CreateNote} from "../interfaces/createNote.interface";
 import type {Note, NoteUpdate} from "../interfaces/notes.interface";
 
-const API_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const getNotes = async () : Promise<Note[]> => {
     const res = await fetch(`${API_URL}/notes`, {credentials : "include"});
